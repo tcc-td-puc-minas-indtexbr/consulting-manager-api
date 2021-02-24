@@ -1,0 +1,17 @@
+version: "3.2"
+services:
+  consulting-manager-api:
+    build:
+      context: .
+      dockerfile: ./docker/python/Dockerfile
+    privileged: true
+    ports:
+      - 8000:8000
+    networks:
+      - tcc-td-network
+    volumes:
+      - ./:/app
+
+networks:
+  tcc-td-network:
+    external: true
