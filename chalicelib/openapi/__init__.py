@@ -19,7 +19,7 @@ servers = [
 
 if get_config().APP_ENV == "development":
     servers.append({
-        "url": "http://localhost:8000",
+        "url": "http://localhost:8001",
         "description": "Development server"
     })
 

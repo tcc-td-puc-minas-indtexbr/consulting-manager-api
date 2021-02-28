@@ -41,7 +41,7 @@
         "APP_ENV": "staging",
         "DEBUG": "false",
         "LOG_LEVEL": "info",
-        "API_SERVER": "http://localhost:8000",
+        "API_SERVER": "http://localhost:8001",
         "API_SERVER_DESCRIPTION": "Development server",
         "DYNAMODB_TABLE_NAME": "consulting-manager-dynamodb-ConsultingTable-162GABIH09FBF"
       },
