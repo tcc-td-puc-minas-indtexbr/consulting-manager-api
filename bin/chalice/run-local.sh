@@ -7,7 +7,7 @@ then
 fi
 if [ -z "$PORT" ]
 then
-  PORT=8000
+  PORT=8001
 fi
 #chalice local --port $PORT
 #chalice local --no-autoreload

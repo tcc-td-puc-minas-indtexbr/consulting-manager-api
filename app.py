@@ -124,7 +124,7 @@ def consulting_list():
                 description: Success response
                 content:
                     application/json:
-                        schema: ConsultanciesListResponseSchema
+                        schema: ConsultingListResponseSchema
     """
     service = ConsultingManagerService(logger=logger)
     request = ApiRequest().parse_request(app)
@@ -169,7 +169,7 @@ def consulting_get(uuid):
                 description: Success response
                 content:
                     application/json:
-                        schema: ConsultancyGetResponseSchema
+                        schema: ConsultingGetResponseSchema
     """
     service = ConsultingManagerService(logger=logger)
     request = ApiRequest().parse_request(app)
@@ -202,12 +202,12 @@ def consulting_create():
             required: true
             content:
                 application/json:
-                    schema: ConsultancyCreateRequest
+                    schema: ConsultingCreateRequest
         responses:
             200:
                 content:
                     application/json:
-                        schema: ConsultancyCreateResponseSchema
+                        schema: ConsultingCreateResponseSchema
     """
     service = ConsultingManagerService(logger=logger)
     request = ApiRequest().parse_request(app)
@@ -230,4 +230,127 @@ def consulting_create():
             status_code = 500
 
         response.set_exception(api_ex)
-    return response.get_response(status_code)    
+    return response.get_response(status_code)
+
+@app.route('/v1/consulting/{uuid}', cors=True, methods=['PUT'])
+def consulting_update(uuid):
+    """
+    put:
+        summary: Update Consultancy
+        parameters:
+            - in: path
+              name: uuid
+              description: "Consultancy uuid"
+              required: true
+              schema:
+                type: string
+                format: UUID
+        requestBody:
+            description: 'Objeto a ser atualizado'
+            required: true
+            content:
+                application/json:
+                    schema: ConsultingUpdateRequest
+        responses:
+            200:
+                content:
+                    application/json:
+                        schema: ConsultingUpdateResponseSchema
+    """
+    service = ConsultingManagerService(logger=logger)
+    request = ApiRequest().parse_request(app)
+    response = ApiResponse(request)
+    status_code = 200
+
+    try:
+        data = service.update(request, uuid)
+
+        response.set_data(data)
+
+    except Exception as err:
+        logger.error(err)
+
+        if isinstance(err, ApiException):
+            api_ex = err
+            status_code = 404
+        else:
+            api_ex = ApiException(MessagesEnum.UPDATE_ERROR)
+            status_code = 500
+
+        response.set_exception(api_ex)
+    return response.get_response(status_code)
+
+
+@app.route('/v1/consulting/{uuid}', cors=True, methods=['DELETE'])
+def consulting_delete(uuid):
+    """
+    delete:
+        summary: Delete Consultancy
+        parameters:
+            - in: path
+              name: uuid
+              description: "Consultancy uuid"
+              required: true
+              schema:
+                type: string
+                format: UUID
+        responses:
+            200:
+                content:
+                    application/json:
+                        schema: ConsultingDeleteResponseSchema
+    """
+    service = ConsultingManagerService(logger=logger)
+    request = ApiRequest().parse_request(app)
+    response = ApiResponse(request)
+    status_code = 200
+
+    try:
+        service.delete(request, uuid)
+        data = {
+            "success": True,
+            "code": MessagesEnum.ENTITY_DELETION_SUCCESS.code,
+            "label": MessagesEnum.ENTITY_DELETION_SUCCESS.label,
+            "message": MessagesEnum.ENTITY_DELETION_SUCCESS.message,
+            "params": [uuid]
+        }
+        response.set_data(data)
+
+    except Exception as err:
+        print(err)
+        logger.error(err)
+
+        if isinstance(err, ApiException):
+            api_ex = err
+            status_code = 404
+        else:
+            api_ex = ApiException(MessagesEnum.DELETE_ERROR)
+            status_code = 500
+
+        data = {
+            "success": False,
+            "code": api_ex.code,
+            "label": api_ex.label,
+            "message": api_ex.message,
+            # por segurança não passar o param aqui
+            "params": []
+        }
+        response.set_data(data)
+
+        # response.set_exception(api_ex)
+    return response.get_response(status_code)
+
+# doc
+spec.path(view=ping, path="/alive", operations=yaml.safe_load(alive.__doc__))
+spec.path(view=ping, path="/ping", operations=yaml.safe_load(ping.__doc__))
+spec.path(view=consulting_list, path="/v1/consulting", operations=yaml.safe_load(consulting_list.__doc__))
+spec.path(view=consulting_create, path="/v1/consulting", operations=yaml.safe_load(consulting_create.__doc__))
+spec.path(view=consulting_get, path="/v1/consulting/{uuid}", operations=yaml.safe_load(consulting_get.__doc__))
+spec.path(view=consulting_update, path="/v1/consulting/{uuid}", operations=yaml.safe_load(consulting_update.__doc__))
+spec.path(view=consulting_delete, path="/v1/consulting/{uuid}", operations=yaml.safe_load(consulting_delete.__doc__))
+
+helper.print_routes(app, logger)
+logger.info('Running at {}'.format(os.environ['APP_ENV']))
+
+# generate de openapi.yml
+generate_openapi_yml(spec, logger)

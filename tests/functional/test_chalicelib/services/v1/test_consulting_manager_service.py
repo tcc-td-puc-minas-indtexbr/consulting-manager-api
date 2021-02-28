@@ -5,7 +5,7 @@ from unittest_data_provider import data_provider
 from chalicelib.config import get_config
 from chalicelib.http_resources.request import ApiRequest
 from chalicelib.logging import get_logger
-from chalicelib.services.v1.standard_manager_service import StandardManagerService
+from chalicelib.services.v1.consulting_manager_service import ConsultingManagerService
 from tests import ROOT_DIR
 from tests.functional.functionaltestutils import BaseFunctionalTestCase
 from tests.functional.helpers.connection_helper import ConnectionHelper, DynamoDBHelper
