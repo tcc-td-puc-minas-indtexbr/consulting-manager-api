@@ -1,10 +1,10 @@
 {
   "version": "2.0",
-  "app_name": "consulting-manager-api",
+  "app_name": "standard_manager_api",
   "tags": {
     "Sector": "IndTexBr",
     "Team": "TCC TD SIGO",
-    "App": "Consulting Manager API"
+    "App": "Standard Manager API"
   },
   "lambda_timeout": 120,
   "memory": 128,
@@ -21,7 +21,9 @@
         "APP_ENV": "production",
         "DEBUG": "false",
         "LOG_LEVEL": "info",
-        "DYNAMODB_TABLE_NAME": "consulting-manager-dynamodb-ConsultingTable-1OHDYTJP208R1"
+        "API_SERVER": "https://services.hagatus.com.br/sigo-consulting",
+        "API_SERVER_DESCRIPTION": "Production server",
+        "DYNAMODB_TABLE_NAME": "consulting-manager-dynamodb-ConsultingTable-162GABIH09FBF"
       },
       "tags": {
         "Env": "production"
@@ -39,7 +41,9 @@
         "APP_ENV": "staging",
         "DEBUG": "false",
         "LOG_LEVEL": "info",
-        "DYNAMODB_TABLE_NAME": "consulting-manager-dynamodb-ConsultingTable-1OHDYTJP208R1"
+        "API_SERVER": "http://localhost:8000",
+        "API_SERVER_DESCRIPTION": "Development server",
+        "DYNAMODB_TABLE_NAME": "consulting-manager-dynamodb-ConsultingTable-162GABIH09FBF"
       },
       "tags": {
         "Env": "staging"
@@ -57,8 +61,10 @@
         "APP_ENV": "development",
         "DEBUG": "true",
         "LOG_LEVEL": "info",
-        "DYNAMODB_TABLE_NAME": "consulting-manager-dynamodb-ConsultingTable-1OHDYTJP208R1",
-        "AWS_PROFILE": "tcc-td-puc-minas-dev"
+        "API_SERVER": "https://services.hagatus.com.br/sigo-consulting",
+        "API_SERVER_DESCRIPTION": "Production server",
+        "DYNAMODB_TABLE_NAME": "consulting-manager-dynamodb-ConsultingTable-162GABIH09FBF",
+        "AWS_PROFILE": "sigo-lambdas"
       }
     }
   }

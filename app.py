@@ -1,29 +1,233 @@
+import base64
+import os
+
+import yaml
+
+from chalicelib.boot import register_vendor
+
+# execute before other codes of app
+register_vendor()
+
+from chalicelib.helper import open_vendor_file
+from chalicelib.http_helper import CUSTOM_DEFAULT_HEADERS
+from chalicelib.openapi import spec, generate_openapi_yml
+
+# registra a pasta vendor (antes de tudo)
+from chalicelib.enums.messages import MessagesEnum
+from chalicelib.exceptions import ApiException
+from chalicelib.http_resources.request import ApiRequest
+from chalicelib.http_resources.response import ApiResponse
+from chalicelib.services.v1.consulting_manager_service import ConsultingManagerService
+
+from chalicelib.config import get_config
+from chalicelib.logging import get_logger, get_log_level
+from chalicelib import APP_NAME, helper, http_helper, APP_VERSION
 from chalice import Chalice
 
-app = Chalice(app_name='consulting-manager-api')
+# config
+config = get_config()
+# debug
+debug = helper.debug_mode()
+# logger
+logger = get_logger()
+# chalice app
+app = Chalice(app_name=APP_NAME, debug=debug)
+# override the log configs
+if not debug:
+    # override to the level desired
+    logger.level = get_log_level()
+# override the log instance
+app.log = logger
 
 
-@app.route('/')
+@app.route('/', cors=True)
 def index():
-    return {'hello': 'world'}
+    body = {"app": '%s:%s' % (APP_NAME, APP_VERSION)}
+    return http_helper.create_response(body=body, status_code=200)
 
+@app.route('/ping', cors=True)
+def ping():
+    """
+    get:
+        summary: Ping method
+        responses:
+            200:
+                description: Success response
+                content:
+                    application/json:
+                        schema: PingSchema
 
-# The view function above will return {"hello": "world"}
-# whenever you make an HTTP GET request to '/'.
-#
-# Here are a few more examples:
-#
-# @app.route('/hello/{name}')
-# def hello_name(name):
-#    # '/hello/james' -> {"hello": "james"}
-#    return {'hello': name}
-#
-# @app.route('/users', methods=['POST'])
-# def create_user():
-#     # This is the JSON body the user sent in their POST request.
-#     user_as_json = app.current_request.json_body
-#     # We'll echo the json body back to the user in a 'user' key.
-#     return {'user': user_as_json}
-#
-# See the README documentation for more examples.
-#
+    """
+    body = {"message": "PONG"}
+    return http_helper.create_response(body=body, status_code=200)
+
+@app.route('/alive', cors=True)
+def alive():
+    """
+        get:
+            summary: Service Health Method
+            responses:
+                200:
+                    description: Success response
+                    content:
+                        application/json:
+                            schema: AliveSchema
+
+        """
+    body = {"app": "I'm alive!"}
+    return http_helper.create_response(body=body, status_code=200)
+
+# TODO: Checar    
+@app.route('/favicon-32x32.png')
+def favicon():
+    headers = CUSTOM_DEFAULT_HEADERS.copy()
+    headers['Content-Type'] = "image/png"
+    data = base64.b64decode(
+        'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAkFBMVEUAAAAQM0QWNUYWNkYXNkYALjoWNUYYOEUXN0YaPEUPMUAUM0QVNUYWNkYWNUYWNUUWNUYVNEYWNkYWNUYWM0eF6i0XNkchR0OB5SwzZj9wyTEvXkA3az5apTZ+4C5DgDt31C9frjU5bz5uxTI/eDxzzjAmT0IsWUEeQkVltzR62S6D6CxIhzpKijpJiDpOkDl4b43lAAAAFXRSTlMAFc304QeZ/vj+ECB3xKlGilPXvS2Ka/h0AAABfklEQVR42oVT2XaCMBAdJRAi7pYJa2QHxbb//3ctSSAUPfa+THLmzj4DBvZpvyauS9b7kw3PWDkWsrD6fFQhQ9dZLfVbC5M88CWCPERr+8fLZodJ5M8QJbjbGL1H2M1fIGfEm+wJN+bGCSc6EXtNS/8FSrq2VX6YDv++XLpJ8SgDWMnwqznGo6alcTbIxB2CHKn8VFikk2mMV2lEnV+CJd9+jJlxXmMr5dW14YCqwgbFpO8FNvJxwwM4TPWPo5QalEsRMAcusXpi58/QUEWPL0AK1ThM5oQCUyXPoPINkdd922VBw4XgTV9zDGWWFrgjIQs4vwvOg6xr+6gbCTqE+DYhlMGX0CF2OknK5gQ2JrkDh/W6TOEbYDeVecKbJtyNXiCfGmW7V93J2hDus1bDfhxWbIZVYDXITA7Lo6E0Ktgg9eB4KWuR44aj7ppBVPazhQH7/M/KgWe9X1qAg8XypT6nxIMJH+T94QCsLvj29IYwZxyO9/F8vCbO9tX5/wDGjEZ7vrgFZwAAAABJRU5ErkJggg==')
+    return http_helper.create_response(body=data, status_code=200, headers=headers)
+
+# TODO: Checar
+@app.route('/docs')
+def docs():
+    headers = CUSTOM_DEFAULT_HEADERS.copy()
+    headers['Content-Type'] = "text/html"
+    html_file = open_vendor_file('./public/swagger/index.html', 'r')
+    html = html_file.read()
+    return http_helper.create_response(body=html, status_code=200, headers=headers)
+
+# TODO: Checar
+@app.route('/openapi.json')
+def docs():
+    headers = CUSTOM_DEFAULT_HEADERS.copy()
+    headers['Content-Type'] = "text/json"
+    html_file = open_vendor_file('./public/swagger/openapi.json', 'r')
+    html = html_file.read()
+    return http_helper.create_response(body=html, status_code=200, headers=headers)
+
+# TODO: Checar
+@app.route('/openapi.yml')
+def docs():
+    headers = CUSTOM_DEFAULT_HEADERS.copy()
+    headers['Content-Type'] = "text/yaml"
+    html_file = open_vendor_file('./public/swagger/openapi.yml', 'r')
+    html = html_file.read()
+    return http_helper.create_response(body=html, status_code=200, headers=headers)
+
+### Consulting
+@app.route('/v1/consulting', cors=True)
+def consulting_list():
+    """
+    get:
+       summary: List all consultancies
+       responses:
+            200:
+                description: Success response
+                content:
+                    application/json:
+                        schema: ConsultanciesListResponseSchema
+    """
+    service = ConsultingManagerService(logger=logger)
+    request = ApiRequest().parse_request(app)
+    response = ApiResponse(request)
+    status_code = 200
+
+    try:
+        data = service.list(request)
+        total = service.count(request)
+
+        response.set_data(data)
+        response.set_total(total)
+
+    except Exception as err:
+        logger.error(err)
+
+        if isinstance(err, ApiException):
+            api_ex = err
+            status_code = 404
+        else:
+            api_ex = ApiException(MessagesEnum.LIST_ERROR)
+            status_code = 500
+
+        response.set_exception(api_ex)
+    return response.get_response(status_code)
+
+@app.route('/v1/consulting/{uuid}', cors=True)
+def consulting_get(uuid):
+    """
+    get:
+        summary: Get Consultancy
+        parameters:
+            - in: path
+              name: uuid
+              description: "Consultancy uuid"
+              required: true
+              schema:
+                type: string
+                format: UUID
+        responses:
+            200:
+                description: Success response
+                content:
+                    application/json:
+                        schema: ConsultancyGetResponseSchema
+    """
+    service = ConsultingManagerService(logger=logger)
+    request = ApiRequest().parse_request(app)
+    response = ApiResponse(request)
+    status_code = 200
+
+    try:
+        data = service.get(request, uuid)
+        response.set_data(data)
+    except Exception as err:
+        logger.error(err)
+
+        if isinstance(err, ApiException):
+            api_ex = err
+            status_code = 404
+        else:
+            api_ex = ApiException(MessagesEnum.FIND_ERROR)
+            status_code = 500
+
+        response.set_exception(api_ex)
+    return response.get_response(status_code)
+
+@app.route('/v1/consulting', cors=True, methods=['POST'])
+def consulting_create():
+    """
+    post:
+        summary: Create Consultancy
+        requestBody:
+            description: 'Objeto a ser criado'
+            required: true
+            content:
+                application/json:
+                    schema: ConsultancyCreateRequest
+        responses:
+            200:
+                content:
+                    application/json:
+                        schema: ConsultancyCreateResponseSchema
+    """
+    service = ConsultingManagerService(logger=logger)
+    request = ApiRequest().parse_request(app)
+    response = ApiResponse(request)
+    status_code = 200
+
+    try:
+        data = service.create(request)
+
+        response.set_data(data)
+
+    except Exception as err:
+        logger.error(err)
+
+        if isinstance(err, ApiException):
+            api_ex = err
+            status_code = 404
+        else:
+            api_ex = ApiException(MessagesEnum.LIST_ERROR)
+            status_code = 500
+
+        response.set_exception(api_ex)
+    return response.get_response(status_code)    
